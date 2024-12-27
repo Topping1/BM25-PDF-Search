@@ -15,7 +15,10 @@ Create a knowledge base from PDF files and search it with BM25 algorithm.
   - a text box to the left. The text from the most relevant match is shown there, along with the name of the source PDF file, the page where the match was found and the relative score (higher number --> more relevant result). You can use the "+" or "-" buttons to increase or decrease the font size. The search keywords are highlighted.
   - a graphics box to the right. This box shows the PDF file and it is synchronized to the left box. You can zoom in/zoom out using Ctrl-+ and Ctrl-- and reset the zoom with Ctrl-0. Left clicking on the PDF view will open the PDF file in the default PDF viewer.
   - a left "<--" and right "-->" buttons to navigate the results.
- 
+
+# Tips
+- You can organize your PDF files in separate folders and have a copy of the ```BM25-PDF-Search.py``` script for each folder. By default the script only looks for json files in the current folder (not sub-folders).
+
 # Screenshoot
 ![Screenshoot](screenshot-BM25-PDF-Search.jpg)
 
