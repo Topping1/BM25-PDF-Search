@@ -1,5 +1,5 @@
 # BM25-PDF-Search
-Create a knowledge base from PDF files and search it with BM25 algorithm.
+Create a knowledge base from PDF files and search it with BM25 algorithm. No AI, no LLMs, no embeddings, and yet surprisingly useful!.
 
 # How it works
 - install requirements:
