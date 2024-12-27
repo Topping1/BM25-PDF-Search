@@ -8,9 +8,9 @@ Create a knowledge base from PDF files and search it with BM25 algorithm.
 - copy ```BM25-PDF-Search.py``` to the folder with your library of PDF files and json files.
 - run ```BM25-PDF-Search.py``` script.
 - the main window is has the following elements:
-  - a search input box at the top. Input your search keywords here. Given how BM25 works, you have to type your keywords exactly as they could appear in the PDF file. So for example, searching for "dog" will not match "dogs" and viceversa. Try to expand your search keywords with singular/plural variants and synonims. Press ENTER to search.
+  - a search input box at the top. Input your search keywords here. Given how BM25 works, you have to type your keywords exactly as they could appear in the PDF file. So for example, searching for "dog" will not match "dogs" and vice versa. Try to expand your search keywords with singular/plural variants and synonyms. Press ENTER to search.
   - a text box to the left. The text from the most relevant match is shown there, along with the name of the source PDF file, the page where the match was found and the relative score (higher number --> more relevant result). You can use the "+" or "-" buttons to increase or decrease the font size. The search keywords are highlighted.
-  - a graphics box to the right. This box shows the PDF file and it is syncronized to the left box. You can zoom in/zoom out using Ctrl-+ and Ctrl-- and reset the zoom with Ctrl-0. Left clicking on the PDF view will open the PDF file in the default PDF viewer.
+  - a graphics box to the right. This box shows the PDF file and it is synchronized to the left box. You can zoom in/zoom out using Ctrl-+ and Ctrl-- and reset the zoom with Ctrl-0. Left clicking on the PDF view will open the PDF file in the default PDF viewer.
   - a left "<--" and right "-->" buttons to navigate the results.
  
 # Screenshoot
