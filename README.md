@@ -14,6 +14,7 @@ Create a knowledge base from PDF files and search it with BM25 algorithm.
   - a left "<--" and right "-->" buttons to navigate the results.
  
 # Screenshoot
+![Screenshoot](screenshots/image_name.png)
 
 
 
