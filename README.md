@@ -1,26 +1,117 @@
-# BM25-PDF-Search
-Create a knowledge base from PDF files and search it with BM25 algorithm. No AI, no LLMs, no embeddings, and yet surprisingly useful!.
+# PDF Knowledge Base Builder and Search Interface
 
-# How it works
-- install requirements:
-  - ```pip install pymupdf4llm```
-  - ```pip install PyQt5```
-  - ```pip install Bm25s```
-- copy ```chunk-pdf-pages.py``` to the folder with your library of PDF files.
-- run ```chunk-pdf-pages.py``` script. The script will extract the text from the PDF files, chunking it in pages. The progress will be shown. If the script freezes is PymuPDF4LLM fault! (some PDF files cause this). If this happens, try to optimize the offending PDF files or try printing them to another PDF file or some other process that recreates or optimizes the PDF files. This process will create JSON files with the same filename of the source PDFs but with json extension (for example, test.pdf --> test.json). This file contains the extracted text from the PDF files, grouped in pages. This file must reside in the same folder as the source PDF.
-- copy ```BM25-PDF-Search.py``` to the folder with your library of PDF files and json files.
-- run ```BM25-PDF-Search.py``` script.
-- the main window is has the following elements:
-  - a search input box at the top. Input your search keywords here. Given how BM25 works, you have to type your keywords exactly as they could appear in the PDF file. So for example, searching for "dog" will not match "dogs" and vice versa. Try to expand your search keywords with singular/plural variants and synonyms. Press ENTER to search.
-  - a text box to the left. The text from the most relevant match is shown there, along with the name of the source PDF file, the page where the match was found and the relative score (higher number --> more relevant result). You can use the "+" or "-" buttons to increase or decrease the font size. The search keywords are highlighted.
-  - a graphics box to the right. This box shows the PDF file and it is synchronized to the left box. You can zoom in/zoom out using Ctrl-+ and Ctrl-- and reset the zoom with Ctrl-0. Left clicking on the PDF view will open the PDF file in the default PDF viewer.
-  - a left "<--" and right "-->" buttons to navigate the results.
+This repository provides a suite of Python scripts to create a searchable knowledge base from PDF files, enabling efficient and intuitive text search with or without embeddings. The primary focus is simplicity and portability, avoiding the need for a formal database while offering advanced search capabilities.
 
-# Tips
-- You can organize your PDF files in separate folders and have a copy of the ```BM25-PDF-Search.py``` script for each folder. By default the script only looks for json files in the current folder (not sub-folders).
+---
 
-# Screenshoot
+## Features
+- Extracts text from PDFs and saves them as JSON files.
+- Supports embedding generation for enhanced search capabilities.
+- Includes a GUI with search, navigation, and visualization of search results.
+- Optional integration with the `fastembed` library for embedding-based search.
+
+---
+
+## Installation
+
+### Requirements
+Install the required libraries:
+```bash
+pip install pymupdf4llm
+pip install PyQt5
+pip install bm25s
+```
+
+#### Optional Libraries
+To enable embedding-based search:
+```bash
+pip install fastembed
+```
+
+**Pros of using `fastembed`:**
+- Enables embedding-based search for semantic relevance.
+- Supports reranking with embeddings.
+
+**Cons if `fastembed` is not installed:**
+- Only BM25 and simple text search methods are available.
+
+---
+
+## Workflow
+
+### 1. Minimum Workflow (JSON files only)
+- Run `chunk-pdf-pages.py` to extract text from PDFs into JSON files.
+- Use the `BM25-String-Embed-Rerank-PDF-Search.py` script to search the JSON files using BM25 or simple text search.
+
+### 2. Recommended Workflow (JSON + EMB files)
+- Run `chunk-pdf-pages.py` to create JSON files from PDFs.
+- Run `create-JSON-embedding.py` to generate EMB files containing text embeddings for each page.
+- Use `BM25-String-Embed-Rerank-PDF-Search.py` for full search functionality, including embedding-based search and reranking.
+
+---
+
+## Scripts Overview
+
+### `chunk-pdf-pages.py`
+- Extracts text from PDF files into JSON format, chunked by pages.
+- Outputs one JSON file per PDF, named after the original PDF.
+
+### `create-JSON-embedding.py`
+- Generates embeddings for the text in JSON files using `fastembed`.
+- Produces `.emb` files corresponding to the JSON files. These contain embeddings but exclude text for reduced size.
+
+### `count tokens-words.py`
+- Analyzes JSON files to calculate statistics like word count, token count, and token distribution.
+- Outputs summaries and ASCII histograms for insights into document structure.
+
+### `BM25-String-Embed-Rerank-PDF-Search.py`
+- Main GUI application for searching the knowledge base.
+- Supports BM25, simple text search, and embedding-based search (if EMB files are available and `fastembed` is installed).
+
+---
+
+## GUI Usage
+
+### Components
+1. **Search Input Box**: Type your search keywords here. Press `Enter` to execute the search.
+2. **Text Results Box**: Displays the most relevant text, including:
+   - Filename
+   - Page number
+   - Relevance score
+3. **PDF Viewer**: Displays the corresponding PDF page with highlighted keywords.
+4. **Navigation Buttons**:
+   - `<--` and `-->`: Navigate between search results.
+   - `+` and `-`: Adjust text font size.
+   - `Ctrl++`, `Ctrl+-`, `Ctrl+0`: Zoom in, zoom out, or reset zoom for the PDF viewer.
+
+### Keyboard Shortcuts
+- `Enter`: Perform a search.
+- `Alt+Left` / `Alt+Right`: Navigate results.
+- `Ctrl+Left`, `Ctrl+Right`, `Ctrl+Up`, `Ctrl+Down`: Scroll the PDF view.
+- `Ctrl++`, `Ctrl+-`, `Ctrl+0`: Adjust PDF zoom.
+- `PageUp` and `PageDown` to change the page on the PDF view.
+
+---
+
+## Tips
+- Organize your PDFs in folders and keep separate JSON and EMB files for each folder.
+- For best performance, use `fastembed` to enable embedding-based searches and reranking.
+- If the script freezes while processing PDFs, optimize or recreate the problematic PDFs.
+
+---
+
+## Example
+1. Place PDFs in a folder.
+2. Run:
+   ```bash
+   python chunk-pdf-pages.py
+   python create-JSON-embedding.py
+   python BM25-String-Embed-Rerank-PDF-Search.py
+   ```
+3. Use the GUI to search your knowledge base.
+
+---
+
+## Screenshots
 ![Screenshoot](screenshot-BM25-PDF-Search.jpg)
-
-
 
