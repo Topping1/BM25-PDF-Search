@@ -79,7 +79,20 @@ pip install fastembed
    - Page number
    - Relevance score
 3. **PDF Viewer**: Displays the corresponding PDF page with highlighted keywords.
-4. **Navigation Buttons**:
+4. **Dropdown Boxes**:
+   - **Search Method**: Select one of the following methods:
+     - **BM25**: Default search using BM25.
+     - **Simple Text Search**: Searches for exact keywords and phrases.
+     - **Embeddings Search**: Uses semantic search based on embeddings (requires `fastembed` and EMB files).
+   - **Reranking Method**: Options include:
+     - No Reranking
+     - Minimal Span-Based Scoring
+     - Exact Text Search
+     - Embeddings Rerank (requires `fastembed`)
+   - **Behavior**: 
+     - When **Simple Text Search** or **Embeddings Search** is selected, the reranking options are disabled.
+     - When **BM25** is selected, reranking options are enabled.
+5. **Navigation Buttons**:
    - `<--` and `-->`: Navigate between search results.
    - `+` and `-`: Adjust text font size.
    - `Ctrl++`, `Ctrl+-`, `Ctrl+0`: Zoom in, zoom out, or reset zoom for the PDF viewer.
@@ -87,9 +100,9 @@ pip install fastembed
 ### Keyboard Shortcuts
 - `Enter`: Perform a search.
 - `Alt+Left` / `Alt+Right`: Navigate results.
+- `PageUp` / `PageDown`: Navigate through PDF pages in the viewer.
 - `Ctrl+Left`, `Ctrl+Right`, `Ctrl+Up`, `Ctrl+Down`: Scroll the PDF view.
 - `Ctrl++`, `Ctrl+-`, `Ctrl+0`: Adjust PDF zoom.
-- `PageUp` and `PageDown` to change the page on the PDF view.
 
 ---
 
@@ -114,4 +127,3 @@ pip install fastembed
 
 ## Screenshots
 ![Screenshoot](screenshot-BM25-PDF-Search.jpg)
-
