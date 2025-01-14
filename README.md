@@ -2,6 +2,7 @@
 
 This repository provides a suite of Python scripts to create a searchable knowledge base from PDF files, enabling efficient and intuitive text search with or without embeddings. The primary focus is simplicity and portability, avoiding the need for a formal database while offering advanced search capabilities.
 
+![Screenshoot](screenshot-BM25-PDF-Search.jpg)
 ---
 
 ## News
@@ -151,8 +152,3 @@ The script assumes the **Okular PDF viewer** is installed on your system. If not
    python BM25-String-Embed-Rerank-PDF-Search.py
    ```
 3. Use the GUI to search your knowledge base.
-
----
-
-## Screenshots
-![Screenshoot](screenshot-BM25-PDF-Search.jpg)
