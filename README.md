@@ -4,6 +4,12 @@ This repository provides a suite of Python scripts to create a searchable knowle
 
 ---
 
+## News
+
+- Windows and Linux binaries are available now! Please see the Releases section.
+
+---
+
 ## Features
 - Extracts text from PDFs and saves them as JSON files.
 - Supports embedding generation for enhanced search capabilities.
