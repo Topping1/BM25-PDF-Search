@@ -6,7 +6,7 @@ This repository provides a suite of Python scripts to create a searchable knowle
 
 ## News
 
-- Windows and Linux binaries are available now! Please see the Releases section.
+- Windows and Linux binaries are available now! Please see the [Releases](https://github.com/Topping1/BM25-PDF-Search/releases) section.
 
 ---
 
