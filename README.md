@@ -15,7 +15,7 @@ Data folders
 ## News
 
 - Windows and Linux binaries are available now! Please see the [Releases](https://github.com/Topping1/BM25-PDF-Search/releases) section.
-- Now the user can specify and manage which folders to load at runtime.
+- Now the user can specify and manage which folders to load at runtime. List of folders is saved in the file `folders.ini`
 
 ---
 
