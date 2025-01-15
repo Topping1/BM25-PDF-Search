@@ -2,12 +2,20 @@
 
 This repository provides a suite of Python scripts to create a searchable knowledge base from PDF files, enabling efficient and intuitive text search with or without embeddings. The primary focus is simplicity and portability, avoiding the need for a formal database while offering advanced search capabilities.
 
+Main interface
+
 ![Screenshoot](screenshot-BM25-PDF-Search.jpg)
+
+Data folders
+
+![image](https://github.com/user-attachments/assets/e8c3f475-7c9d-4e8d-88f2-f726b166fedf)
+
 ---
 
 ## News
 
 - Windows and Linux binaries are available now! Please see the [Releases](https://github.com/Topping1/BM25-PDF-Search/releases) section.
+- Now the user can specify and manage which folders to load at runtime.
 
 ---
 
@@ -17,6 +25,7 @@ This repository provides a suite of Python scripts to create a searchable knowle
 - Includes a GUI with search, navigation, and visualization of search results.
 - Optional integration with the `fastembed` library for embedding-based search.
 - Allows opening search results in an external PDF viewer (Okular by default).
+- Tested in Linux and Windows 10
 
 ---
 
