@@ -78,34 +78,34 @@ def remove_accents(input_str):
 
 def load_folders_database():
     """
-    Attempts to load 'folders.json'. 
+    Attempts to load 'folders.ini'. 
     If it doesn't exist, returns None => "not initialized".
     If it exists but is invalid or empty, returns empty list => valid but no data.
     Otherwise, returns the list.
     """
-    if not os.path.exists("folders.json"):
+    if not os.path.exists("folders.ini"):
         return None
 
     try:
-        with open("folders.json", "r", encoding="utf-8") as f:
+        with open("folders.ini", "r", encoding="utf-8") as f:
             data = json.load(f)
             if not isinstance(data, list):
                 # If the JSON is not a list, treat it as invalid
                 return []
             return data
     except Exception as e:
-        print(f"Error reading folders.json: {e}")
+        print(f"Error reading folders.ini: {e}")
         return []
 
 def save_folders_database(folders_list):
     """
-    Saves the given folders_list to 'folders.json'.
+    Saves the given folders_list to 'folders.ini'.
     """
     try:
-        with open("folders.json", "w", encoding="utf-8") as f:
+        with open("folders.ini", "w", encoding="utf-8") as f:
             json.dump(folders_list, f, indent=2)
     except Exception as e:
-        print(f"Error writing folders.json: {e}")
+        print(f"Error writing folders.ini: {e}")
 
 def load_corpus_and_initialize_bm25(folders_list):
     """
@@ -472,7 +472,7 @@ class SearchApp(QMainWindow):
         global FOLDERS_DB
         loaded_data = load_folders_database()
         if loaded_data is None:
-            # None => "folders.json" not found
+            # None => "folders.ini" not found
             self.result_display.setText("Folder database not initialized")
             FOLDERS_DB = []
         else:
@@ -485,7 +485,7 @@ class SearchApp(QMainWindow):
             for err in errors:
                 self.result_display.append(err)
             self.result_display.append(status)
-        # If FOLDERS_DB is empty and not None, it means folders.json was present but invalid or empty
+        # If FOLDERS_DB is empty and not None, it means folders.ini was present but invalid or empty
         if FOLDERS_DB == [] and loaded_data is not None:
             self.result_display.setText("No folders in database. Please add some folders.")
 
@@ -638,7 +638,7 @@ class SearchApp(QMainWindow):
     def on_manage_folders(self):
         """
         Opens the FoldersDialog to manage the folders. 
-        If the user clicks OK, we update 'folders.json' and reload the corpus.
+        If the user clicks OK, we update 'folders.ini' and reload the corpus.
         """
         global FOLDERS_DB
         global GLOBAL_EMBED_MODEL
