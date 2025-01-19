@@ -663,7 +663,7 @@ class SearchApp(QMainWindow):
             if self.embeddings_present and FASTEMBED_AVAILABLE:
                 if GLOBAL_EMBED_MODEL is None:
                     self.result_display.append("Initializing embedding model...")
-                    GLOBAL_EMBED_MODEL = TextEmbedding(model_name="nomic-ai/nomic-embed-text-v1",local_files_only=True)
+                    GLOBAL_EMBED_MODEL = TextEmbedding(model_name="nomic-ai/nomic-embed-text-v1")
                 self.result_display.append("Folders updated. Corpus and embeddings loaded.")
             else:
                 if self.embeddings_present and not FASTEMBED_AVAILABLE:
