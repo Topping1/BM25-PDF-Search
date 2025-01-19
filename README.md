@@ -14,6 +14,7 @@ Data folders
 
 ## News
 
+- Fixed critical bug that kept the script `BM25-String-Embed-Rerank-PDF-Search.py` from running. Updated binaries soon.
 - Windows and Linux binaries are available now! Please see the [Releases](https://github.com/Topping1/BM25-PDF-Search/releases) section.
 - Now the user can specify and manage which folders to load at runtime. List of folders is saved in the file `folders.ini`
 
