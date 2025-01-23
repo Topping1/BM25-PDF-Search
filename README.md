@@ -154,8 +154,10 @@ The script assumes the **Okular PDF viewer** is installed on your system. If not
 ---
 
 ## Notes
-- There is a delay when the application starts as it downloads the embedding model. This delay also happens when using the BM25 search method with the Embedding type reranking.
+- There is a delay when the application starts as it downloads the embedding model. This happens only once. Subsequent runs will not have this delay.
+- This delay also happens when using the BM25 search method with the Embedding type reranking. This happens only once. Subsequent runs will not have this delay.
 - There is also a delay when loading the PDF library at the application start. This depends on the size of the PDF library.
+- Searching with BM25 search with Embedding type reranking has a delay that depends on the number of search hits, as the application has to create embeddings for all the search hits after pressing Enter to submit the query.
 
 ---
 
