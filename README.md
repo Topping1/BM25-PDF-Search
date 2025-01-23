@@ -13,8 +13,8 @@ Data folders
 ---
 
 ## News
-
-- Fixed critical bug that kept the script `BM25-String-Embed-Rerank-PDF-Search.py` from running. Updated binaries soon.
+- Windows and Linux binaries updated (January 22, 2025)
+- Fixed critical bug that kept the script `BM25-String-Embed-Rerank-PDF-Search.py` from running. Updated binaries soon (January 17, 2025)
 - Windows and Linux binaries are available now! Please see the [Releases](https://github.com/Topping1/BM25-PDF-Search/releases) section.
 - Now the user can specify and manage which folders to load at runtime. List of folders is saved in the file `folders.ini`
 
@@ -150,6 +150,12 @@ The script assumes the **Okular PDF viewer** is installed on your system. If not
 - Organize your PDFs in folders and keep separate JSON and EMB files for each folder.
 - For best performance, use `fastembed` to enable embedding-based searches and reranking.
 - If the `chunk-pdf-pages.py` script freezes while processing PDFs, optimize or recreate the problematic PDFs.
+
+---
+
+## Notes
+- There is a delay when the application starts as it downloads the embedding model. This delay also happens when using the BM25 search method with the Embedding type reranking.
+- There is also a delay when loading the PDF library at the application start. This depends on the size of the PDF library.
 
 ---
 
