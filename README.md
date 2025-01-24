@@ -21,11 +21,12 @@ Data folders
 ---
 
 ## Features
+- Quickly search through a library of PDF files with an intuitive interface.
+- Easily navigate and visualize search results using the built-in GUI.
+- Allows opening search results in an external PDF viewer (Okular by default).
 - Extracts text from PDFs and saves them as JSON files.
 - Supports embedding generation for enhanced search capabilities.
-- Includes a GUI with search, navigation, and visualization of search results.
 - Optional integration with the `fastembed` library for embedding-based search.
-- Allows opening search results in an external PDF viewer (Okular by default).
 - Tested in Linux and Windows 10
 
 ---
