@@ -10,9 +10,14 @@ Data folders
 
 ![image](https://github.com/user-attachments/assets/e8c3f475-7c9d-4e8d-88f2-f726b166fedf)
 
+Graphical application to process data folders (folders with PDF files)
+![image](https://github.com/user-attachments/assets/223299ea-6a51-48f8-bff9-56e0342de6e7)
+
+
 ---
 
 ## News
+- Now the creation of the database (JSON and EMB) files is easier! New graphical application to process folders in batches `create-JSON-EMB.py` (February 2, 2025)
 - Windows and Linux binaries updated (January 22, 2025)
 - Fixed critical bug that kept the script `BM25-String-Embed-Rerank-PDF-Search.py` from running. Updated binaries soon (January 17, 2025)
 - Windows and Linux binaries are available now! Please see the [Releases](https://github.com/Topping1/BM25-PDF-Search/releases) section.
