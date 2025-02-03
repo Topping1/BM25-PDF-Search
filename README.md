@@ -17,7 +17,7 @@ Graphical application to process data folders (folders with PDF files)
 ---
 
 ## News
-- Now the creation of the database (JSON and EMB) files is easier! New graphical application to process folders in batches `create-JSON-EMB.py` (February 2, 2025)
+- Now the creation of the database (JSON and EMB) files is easier! New graphical application to process folders in batches `create-JSON-EMB.py`. Binaries for this new script soon!. (February 2, 2025)
 - Windows and Linux binaries updated (January 22, 2025)
 - Fixed critical bug that kept the script `BM25-String-Embed-Rerank-PDF-Search.py` from running. Updated binaries soon (January 17, 2025)
 - Windows and Linux binaries are available now! Please see the [Releases](https://github.com/Topping1/BM25-PDF-Search/releases) section.
@@ -78,14 +78,12 @@ The script assumes the **Okular PDF viewer** is installed on your system. If not
 
 ## Scripts Overview
 
-### `chunk-pdf-pages.py`
+### `create-JSON-EMB.py`
 - Extracts text from PDF files into JSON format, chunked by pages.
 - Outputs one JSON file per PDF, named after the original PDF.
-- The script checks for already processed PDFs, so if the user adds more PDFs to a folder, running the script again will only add the missing JSON files.
-
-### `create-JSON-embedding.py`
 - Generates embeddings for the text in JSON files using `fastembed`.
 - Produces `.emb` files corresponding to the JSON files. These contain embeddings but exclude text for reduced size.
+- The script checks for already processed PDFs, so if the user adds more PDFs to a folder, running the script again will only add the missing JSON files.
 - The script checks for already processed JSON files, so if the user adds more PDFs and processes them into JSON files, running the script again will only add the missing EMB files.
 
 ### `count tokens-words.py` (not required for the workflow)
@@ -154,7 +152,7 @@ The script assumes the **Okular PDF viewer** is installed on your system. If not
 ## Tips
 - Organize your PDFs in folders and keep separate JSON and EMB files for each folder.
 - For best performance, use `fastembed` to enable embedding-based searches and reranking.
-- If the `chunk-pdf-pages.py` script freezes while processing PDFs, optimize or recreate the problematic PDFs.
+- If the `create-JSON-EMB.py` script freezes while processing PDFs, optimize or recreate the problematic PDFs.
 
 ---
 
@@ -170,8 +168,7 @@ The script assumes the **Okular PDF viewer** is installed on your system. If not
 1. Place PDFs in a folder.
 2. Run:
    ```bash
-   python chunk-pdf-pages.py
-   python create-JSON-embedding.py
+   python create-JSON-EMB.py
    python BM25-String-Embed-Rerank-PDF-Search.py
    ```
 3. Use the GUI to search your knowledge base.
