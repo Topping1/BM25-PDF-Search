@@ -1,5 +1,17 @@
 These scripts are a backup of the old scripts to create JSON and EMB files. The scripts are kept here because they can be more convenient to use for power users (use in Terminal window).
 
+## Scripts Overview
+
+### `chunk-pdf-pages.py`
+- Extracts text from PDF files into JSON format, chunked by pages.
+- Outputs one JSON file per PDF, named after the original PDF.
+- The script checks for already processed PDFs, so if the user adds more PDFs to a folder, running the script again will only add the missing JSON files.
+
+### `create-JSON-embedding.py`
+- Generates embeddings for the text in JSON files using `fastembed`.
+- Produces `.emb` files corresponding to the JSON files. These contain embeddings but exclude text for reduced size.
+- The script checks for already processed JSON files, so if the user adds more PDFs and processes them into JSON files, running the script again will only add the missing EMB files.
+
 ## Workflow
 
 ### 1. Minimum Workflow (JSON files only)
