@@ -6,11 +6,21 @@ import numpy as np
 
 from PyQt5 import QtCore, QtWidgets
 
+# Global flag for batch processing; default is disabled.
+BATCH_PROCESSING_ENABLED = False
+
 # ---------------------------
 # External library functions
 # ---------------------------
 import pymupdf4llm
-from fastembed import TextEmbedding
+
+# Check if fastembed library is installed
+try:
+    from fastembed import TextEmbedding
+    FASTEMBED_AVAILABLE = True
+except ImportError:
+    FASTEMBED_AVAILABLE = False
+    TextEmbedding = None
 
 ##########################################
 # Functions for PDF-to-JSON processing
@@ -72,7 +82,7 @@ def process_pdf_to_json(folder, log_callback):
 def embed_pages_in_json(json_file_path, embedding_model, log_callback):
     """
     Reads a JSON file containing text chunks (pages),
-    generates embeddings for each chunk (using the given embedding_model),
+    generates embeddings for each chunk (using the given embedding_model) one page at a time,
     removes the text field, and returns the updated list.
     """
     with open(json_file_path, "r", encoding="utf-8") as json_file:
@@ -85,15 +95,42 @@ def embed_pages_in_json(json_file_path, embedding_model, log_callback):
             try:
                 embedding_gen = embedding_model.passage_embed([page["text"]])
                 embedding = list(embedding_gen)[0]
-                # Convert numpy array to list if needed.
                 if isinstance(embedding, np.ndarray):
                     page["embedding"] = embedding.tolist()
                 else:
                     page["embedding"] = embedding
             except Exception as e:
                 log_callback(f"Error embedding page {i + 1} in {json_file_path}: {e}")
-            # Remove the text key.
             del page["text"]
+    return pages
+
+def embed_pages_in_json_batch(json_file_path, embedding_model, log_callback):
+    """
+    Batch embeds all pages from the JSON file at once.
+    If an error occurs, falls back to page-by-page processing.
+    """
+    with open(json_file_path, "r", encoding="utf-8") as json_file:
+        pages = json.load(json_file)
+
+    total_pages = len(pages)
+    texts = []
+    for i, page in enumerate(pages):
+        texts.append(page.get("text", ""))
+    try:
+        log_callback(f"Batch embedding {total_pages} pages from {os.path.basename(json_file_path)}")
+        embedding_gen = embedding_model.passage_embed(texts)
+        embeddings = list(embedding_gen)
+        for i, embedding in enumerate(embeddings):
+            if isinstance(embedding, np.ndarray):
+                pages[i]["embedding"] = embedding.tolist()
+            else:
+                pages[i]["embedding"] = embedding
+            if "text" in pages[i]:
+                del pages[i]["text"]
+    except Exception as e:
+        log_callback(f"Batch embedding error for {os.path.basename(json_file_path)}: {e}")
+        log_callback("Falling back to page-by-page embedding for this file.")
+        pages = embed_pages_in_json(json_file_path, embedding_model, log_callback)
     return pages
 
 def process_json_to_emb(folder, log_callback):
@@ -102,6 +139,10 @@ def process_json_to_emb(folder, log_callback):
     For each JSON file that does not have a corresponding .emb file,
     generates embeddings and saves the result as a .emb file.
     """
+    if not FASTEMBED_AVAILABLE:
+        log_callback("Fastembed library not installed, EMB files creation disabled.")
+        return
+
     try:
         embedding_model = TextEmbedding(model_name="nomic-ai/nomic-embed-text-v1")
     except Exception as e:
@@ -123,7 +164,10 @@ def process_json_to_emb(folder, log_callback):
             log_callback(f"Skipping {file_name} – EMB already exists.")
             continue
         try:
-            embedded_pages = embed_pages_in_json(json_file_path, embedding_model, log_callback)
+            if BATCH_PROCESSING_ENABLED:
+                embedded_pages = embed_pages_in_json_batch(json_file_path, embedding_model, log_callback)
+            else:
+                embedded_pages = embed_pages_in_json(json_file_path, embedding_model, log_callback)
             with open(emb_file_path, "w", encoding="utf-8") as emb_file:
                 json.dump(embedded_pages, emb_file, ensure_ascii=False, indent=2)
             log_callback(f"Saved EMB to {emb_file_name}")
@@ -177,7 +221,6 @@ class Worker(QtCore.QObject):
             process_json = item["process_json"]
             process_emb = item["process_emb"]
             self.logSignal.emit(f"\n=== Processing folder {i + 1} of {total}: {folder} ===")
-            # Process the folder in order: JSON first, then EMB.
             process_folder(folder, process_json, process_emb, self.logSignal.emit)
             progress_percent = int(((i + 1) / total) * 100)
             self.progressSignal.emit(progress_percent)
@@ -196,6 +239,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setup_ui()
         self.worker_thread = None
 
+        # If fastembed is not available, display a message in the log
+        if not FASTEMBED_AVAILABLE:
+            self.append_log("Fastembed library not installed, EMB files creation disabled.")
+
     def setup_ui(self):
         central_widget = QtWidgets.QWidget()
         self.setCentralWidget(central_widget)
@@ -210,8 +257,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.clear_button = QtWidgets.QPushButton("Clear Queue")
         self.clear_button.clicked.connect(self.clear_queue)
         button_layout.addWidget(self.clear_button)
-
         main_layout.addLayout(button_layout)
+
+        # --- Options Layout ---
+        options_layout = QtWidgets.QHBoxLayout()
+        self.batch_checkbox = QtWidgets.QCheckBox("Batch processing")
+        self.batch_checkbox.setToolTip("Faster EMB creation but can run out of memory, disable if program crashes")
+        self.batch_checkbox.setChecked(False)
+        self.batch_checkbox.toggled.connect(self.update_batch_processing)
+        options_layout.addWidget(self.batch_checkbox)
+        main_layout.addLayout(options_layout)
 
         # --- Queue Table ---
         self.table = QtWidgets.QTableWidget(0, 4)
@@ -236,36 +291,38 @@ class MainWindow(QtWidgets.QMainWindow):
         self.log_text.setReadOnly(True)
         main_layout.addWidget(self.log_text)
 
+    def update_batch_processing(self, state):
+        global BATCH_PROCESSING_ENABLED
+        BATCH_PROCESSING_ENABLED = state
+
     def add_folder(self):
         folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Folder")
         if folder:
             row_position = self.table.rowCount()
             self.table.insertRow(row_position)
-            # Folder path item
             folder_item = QtWidgets.QTableWidgetItem(folder)
             self.table.setItem(row_position, 0, folder_item)
-            # Process JSON checkbox
             json_checkbox = QtWidgets.QCheckBox()
             json_checkbox.setChecked(True)
             self.table.setCellWidget(row_position, 1, json_checkbox)
-            # Process EMB checkbox
             emb_checkbox = QtWidgets.QCheckBox()
-            emb_checkbox.setChecked(True)
+            if not FASTEMBED_AVAILABLE:
+                emb_checkbox.setChecked(False)
+                emb_checkbox.setEnabled(False)
+            else:
+                emb_checkbox.setChecked(True)
             self.table.setCellWidget(row_position, 2, emb_checkbox)
-            # Ensure that EMB checkbox is only enabled if JSON is checked.
             def update_emb(checked, emb=emb_checkbox):
-                emb.setEnabled(checked)
-                if not checked:
+                emb.setEnabled(checked and FASTEMBED_AVAILABLE)
+                if not (checked and FASTEMBED_AVAILABLE):
                     emb.setChecked(False)
             json_checkbox.toggled.connect(update_emb)
-            # Remove button
             remove_button = QtWidgets.QPushButton("Remove")
             remove_button.clicked.connect(lambda _, row=row_position: self.remove_row(row))
             self.table.setCellWidget(row_position, 3, remove_button)
 
     def remove_row(self, row):
         self.table.removeRow(row)
-        # After removal, update the "Remove" button connections for all rows.
         for r in range(self.table.rowCount()):
             widget = self.table.cellWidget(r, 3)
             if widget:
@@ -289,10 +346,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.append_log("No folders in queue.")
             return
 
-        # Disable the start button during processing.
         self.start_button.setEnabled(False)
-
-        # Gather queue items from the table.
         queue_items = []
         for row in range(self.table.rowCount()):
             folder = self.table.item(row, 0).text()
@@ -306,7 +360,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 "process_emb": process_emb
             })
 
-        # Set up the worker and thread.
         self.worker = Worker(queue_items)
         self.worker_thread = QtCore.QThread()
         self.worker.moveToThread(self.worker_thread)
@@ -327,7 +380,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.worker_thread = None
 
     def closeEvent(self, event):
-        # If the worker thread is running, tell it to quit and wait.
         if self.worker_thread is not None and self.worker_thread.isRunning():
             self.worker_thread.quit()
             self.worker_thread.wait()
