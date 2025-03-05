@@ -581,6 +581,13 @@ class SearchApp(QMainWindow):
         self.increase_font_button = QPushButton("+")
         self.increase_font_button.clicked.connect(self.increase_font_size)
         button_layout.addWidget(self.increase_font_button)
+        
+        # --- New checkbox for toggling PDF cropping ---
+        self.crop_pdf_view_checkbox = QCheckBox("Crop PDF view")
+        self.crop_pdf_view_checkbox.setChecked(True)
+        self.crop_pdf_view_checkbox.toggled.connect(self.on_toggle_crop_pdf_view)
+        button_layout.addWidget(self.crop_pdf_view_checkbox)
+        # -------------------------------------------------
 
         top_layout.addLayout(button_layout)
 
@@ -693,39 +700,44 @@ class SearchApp(QMainWindow):
             doc = fitz.open(pdf_path)
             page = doc[page_number - 1]
 
-            # Calculate the bounding box of all text blocks
-            text_blocks = page.get_text("blocks")
-            if not text_blocks:
-                print("No text found on the page.")
-                return
+            # Apply cropping if enabled, else reset to full page view
+            if self.crop_pdf_view_checkbox.isChecked():
+                # Calculate the bounding box of all text blocks
+                text_blocks = page.get_text("blocks")
+                if not text_blocks:
+                    print("No text found on the page.")
+                    return
 
-            # Initialize bounding box coordinates
-            x_min = float('inf')
-            y_min = float('inf')
-            x_max = float('-inf')
-            y_max = float('-inf')
+                # Initialize bounding box coordinates
+                x_min = float('inf')
+                y_min = float('inf')
+                x_max = float('-inf')
+                y_max = float('-inf')
 
-            # Determine the bounding box encompassing all text
-            for block in text_blocks:
-                x0, y0, x1, y1 = block[:4]
-                x_min = min(x_min, x0)
-                y_min = min(y_min, y0)
-                x_max = max(x_max, x1)
-                y_max = max(y_max, y1)
+                # Determine the bounding box encompassing all text
+                for block in text_blocks:
+                    x0, y0, x1, y1 = block[:4]
+                    x_min = min(x_min, x0)
+                    y_min = min(y_min, y0)
+                    x_max = max(x_max, x1)
+                    y_max = max(y_max, y1)
 
-            # Define the new crop box
-            crop_box = fitz.Rect(x_min, y_min, x_max, y_max)
+                # Define the new crop box
+                crop_box = fitz.Rect(x_min, y_min, x_max, y_max)
 
-            # Retrieve the media box
-            media_box = page.mediabox
+                # Retrieve the media box
+                media_box = page.mediabox
 
-            # Check if the crop box is within the media box
-            if (crop_box.x0 >= media_box.x0 and crop_box.y0 >= media_box.y0 and
-                crop_box.x1 <= media_box.x1 and crop_box.y1 <= media_box.y1):
-                # Set the crop box if it's valid
-                page.set_cropbox(crop_box)
+                # Check if the crop box is within the media box
+                if (crop_box.x0 >= media_box.x0 and crop_box.y0 >= media_box.y0 and
+                    crop_box.x1 <= media_box.x1 and crop_box.y1 <= media_box.y1):
+                    # Set the crop box if it's valid
+                    page.set_cropbox(crop_box)
+                else:
+                    print("Calculated crop box is not within the media box. Rendering the full page.")
             else:
-                print("Calculated crop box is not within the media box. Rendering the full page.")
+                # If cropping is disabled, ensure the full page is shown.
+                page.set_cropbox(page.mediabox)
 
             # Render the page
             base_dpi = 150  # base DPI for default zoom
@@ -743,8 +755,6 @@ class SearchApp(QMainWindow):
             pixmap_item = QGraphicsPixmapItem(qt_img)
             self.graphics_scene.addItem(pixmap_item)
 
-
-#-------------------------------------
             # Highlight search terms
             word_positions = page.get_text("words")
             for word in word_positions:
@@ -765,6 +775,14 @@ class SearchApp(QMainWindow):
 
         except Exception as e:
             self.result_display.setText(f"Error displaying PDF: {e}")
+
+    def on_toggle_crop_pdf_view(self):
+        """
+        Called when the crop PDF view checkbox is toggled.
+        Re-render the current PDF page to apply the new cropping setting.
+        """
+        if self.graphics_view.current_pdf_path:
+            self.display_pdf_page(self.graphics_view.current_pdf_path, self.graphics_view.current_page)
 
     def page_up(self):
         if self.graphics_view.current_pdf_path and self.graphics_view.current_page > 1:
