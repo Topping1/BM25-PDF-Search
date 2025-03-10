@@ -3,6 +3,7 @@ import re
 import sys
 import json
 import subprocess
+import platform 
 import numpy as np
 from PyQt5.QtWidgets import (
     QApplication,
@@ -329,8 +330,21 @@ class ClickableGraphicsView(QGraphicsView):
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton and self.current_pdf_path:
             try:
-                # You can replace "okular" with any PDF viewer you prefer:
-                subprocess.run(["okular", self.current_pdf_path, "-p", str(self.current_page)])
+                if platform.system() == "Windows":
+                    # Call Adobe Acrobat Reader on Windows.
+                    subprocess.run([
+                        "AcroRd32.exe",
+                        "/A", f"page={self.current_page}",
+                        self.current_pdf_path
+                    ])
+                else:
+                    # Use Okular on Linux.
+                    subprocess.run([
+                        "okular",
+                        self.current_pdf_path,
+                        "-p",
+                        str(self.current_page)
+                    ])
             except Exception as e:
                 print(f"Failed to open PDF: {e}")
         super().mousePressEvent(event)
