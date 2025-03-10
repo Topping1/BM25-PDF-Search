@@ -17,6 +17,7 @@ Graphical application to process data folders (folders with PDF files)
 ---
 
 ## News
+- Automatic detection of platform (Linux or Windows) to set the default PDF viewer (Okular in Linux and Acrobat Reader in Windows). (March 9, 2025)
 - Added option in the main application `BM25-String-Embed-Rerank-PDF-Search.py` to toggle cropping the PDF view. Some PDF files crop incorrectly, so this option gives the user the capability viewing the uncropped PDF view for problematic PDFs. (March 4, 2025)
 - Graphical application to process folders in batches, `create-JSON-EMB.py`, now has a toggle for processing files in batches (uses more memory. If the script crashes disable this option). Also added an option to make the use of the Fastembed library optional (if the Fastembed library is not installed, the option to create EMB files will be disabled). (March 4, 2025)
 - Now the creation of the database (JSON and EMB) files is easier! New graphical application to process folders in batches `create-JSON-EMB.py`. Binaries for this new script soon!. (February 2, 2025)
