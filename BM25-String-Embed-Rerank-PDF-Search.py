@@ -4,7 +4,9 @@ import sys
 import json
 import subprocess
 import platform 
+import math                              # ← added
 import numpy as np
+from collections import Counter         # ← added
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -77,6 +79,7 @@ def remove_accents(input_str):
     nfkd_form = unicodedata.normalize('NFD', input_str)
     return ''.join([c for c in nfkd_form if not unicodedata.combining(c)])
 
+
 def load_folders_database():
     """
     Attempts to load 'folders.ini'. 
@@ -98,6 +101,7 @@ def load_folders_database():
         print(f"Error reading folders.ini: {e}")
         return []
 
+
 def save_folders_database(folders_list):
     """
     Saves the given folders_list to 'folders.ini'.
@@ -107,6 +111,7 @@ def save_folders_database(folders_list):
             json.dump(folders_list, f, indent=2)
     except Exception as e:
         print(f"Error writing folders.ini: {e}")
+
 
 def load_corpus_and_initialize_bm25(folders_list):
     """
@@ -175,6 +180,7 @@ def load_corpus_and_initialize_bm25(folders_list):
     # Attempt to load embeddings for each JSON
     load_embeddings_for_corpus(all_json_files)
     return error_messages, "BM25 model successfully initialized."
+
 
 def load_embeddings_for_corpus(json_file_list):
     """
@@ -267,6 +273,7 @@ def minimal_span_score(text, query_terms):
 
     return 1.0 / (best_span + 1)
 
+
 def rerank_minimal_span(top_docs, query_terms):
     global GLOBAL_CORPUS
     doc_scores = []
@@ -276,6 +283,7 @@ def rerank_minimal_span(top_docs, query_terms):
         doc_scores.append((doc_id, ms_score))
     doc_scores.sort(key=lambda x: x[1], reverse=True)
     return doc_scores
+
 
 ###############################################################################
 # Exact text search (unchanged)
@@ -296,6 +304,7 @@ def rerank_exact_text(top_docs, query_phrase):
 
     return matched + unmatched
 
+
 ###############################################################################
 # Helper function for "Simple text search"
 ###############################################################################
@@ -311,6 +320,7 @@ def parse_simple_search_query(query_str):
         elif word:
             unquoted_words.append(word)
     return quoted_phrases, unquoted_words
+
 
 ###############################################################################
 # A custom QGraphicsView to handle clicking on PDF pages (unchanged)
@@ -349,8 +359,9 @@ class ClickableGraphicsView(QGraphicsView):
                 print(f"Failed to open PDF: {e}")
         super().mousePressEvent(event)
 
+
 ###############################################################################
-# Dialog for managing folders
+# Dialog for managing folders (unchanged)
 ###############################################################################
 class FoldersDialog(QDialog):
     def __init__(self, folders_list, parent=None):
@@ -463,6 +474,7 @@ class FoldersDialog(QDialog):
     def reject_dialog(self):
         super().reject()
 
+
 ###############################################################################
 # The main GUI application class
 ###############################################################################
@@ -550,6 +562,7 @@ class SearchApp(QMainWindow):
         self.search_method_label = QLabel("Search method:")
         self.search_method_combo = QComboBox()
         self.search_method_combo.addItem("BM25")
+        self.search_method_combo.addItem("BM25 substring")         # ← added
         self.search_method_combo.addItem("Simple text search")
         self.search_method_combo.addItem("Embeddings search")
         self.search_method_combo.currentIndexChanged.connect(self.update_rerank_combo_status)
@@ -646,6 +659,8 @@ class SearchApp(QMainWindow):
 
         QShortcut(QKeySequence("Alt+Left"), self, self.show_previous_chunk)
         QShortcut(QKeySequence("Alt+Right"), self, self.show_next_chunk)
+        QShortcut(QKeySequence("Alt+Up"), self, self.page_up)       # ← added
+        QShortcut(QKeySequence("Alt+Down"), self, self.page_down)   # ← added
 
         # PDF scrolling shortcuts
         QShortcut(QKeySequence("Ctrl+Left"), self, self.scroll_pdf_left)
@@ -656,58 +671,16 @@ class SearchApp(QMainWindow):
         # Set initial status for Reranking combo
         self.update_rerank_combo_status()
 
-    def on_manage_folders(self):
-        """
-        Opens the FoldersDialog to manage the folders. 
-        If the user clicks OK, we update 'folders.ini' and reload the corpus.
-        """
-        global FOLDERS_DB
-        global GLOBAL_EMBED_MODEL
-        global FASTEMBED_AVAILABLE
-
-        dialog = FoldersDialog(folders_list=FOLDERS_DB.copy(), parent=self)
-        result = dialog.exec_()
-        if result == QDialog.Accepted:
-            save_folders_database(dialog.folders_list)
-            FOLDERS_DB = dialog.folders_list
-
-            # Reload the corpus
-            GLOBAL_CORPUS.clear()
-            errors, status = load_corpus_and_initialize_bm25(FOLDERS_DB)
-            self.result_display.clear()
-            for err in errors:
-                self.result_display.append(err)
-            self.result_display.append(status)
-
-            # Check if embeddings are present
-            self.embeddings_present = any(('embedding' in doc) for doc in GLOBAL_CORPUS)
-            if self.embeddings_present and FASTEMBED_AVAILABLE:
-                if GLOBAL_EMBED_MODEL is None:
-                    self.result_display.append("Initializing embedding model...")
-                    GLOBAL_EMBED_MODEL = TextEmbedding(model_name="nomic-ai/nomic-embed-text-v1")
-                self.result_display.append("Folders updated. Corpus and embeddings loaded.")
-            else:
-                if self.embeddings_present and not FASTEMBED_AVAILABLE:
-                    self.result_display.append("Folders updated. Embeddings found, but fastembed is not installed.")
-                else:
-                    self.result_display.append("Folders updated.")
-        else:
-            # user canceled => do nothing
-            pass
-
     def update_rerank_combo_status(self):
         current_method = self.search_method_combo.currentText()
-        if current_method == "BM25":
-            self.rerank_combo.setEnabled(True)
-        elif current_method == "Simple text search":
-            self.rerank_combo.setEnabled(False)
-        elif current_method == "Embeddings search":
+        # Disable rerank for simple, embeddings, and substring methods
+        if current_method in ("Simple text search", "Embeddings search", "BM25 substring"):
             self.rerank_combo.setEnabled(False)
         else:
             self.rerank_combo.setEnabled(True)
 
     # -------------------------------------------------------------------------
-    # PDF display and navigation
+    # PDF display and navigation (unchanged)
     # -------------------------------------------------------------------------
     def display_pdf_page(self, pdf_path, page_number):
         try:
@@ -751,7 +724,8 @@ class SearchApp(QMainWindow):
                     print("Calculated crop box is not within the media box. Rendering the full page.")
             else:
                 # If cropping is disabled, ensure the full page is shown.
-                page.set_cropbox(page.mediabox)
+                pass
+                #page.set_cropbox(page.mediabox)
 
             # Render the page
             base_dpi = 150  # base DPI for default zoom
@@ -769,14 +743,14 @@ class SearchApp(QMainWindow):
             pixmap_item = QGraphicsPixmapItem(qt_img)
             self.graphics_scene.addItem(pixmap_item)
 
-            # Highlight search terms
+            # Highlight search terms in PDF view (modified to substring match)
             word_positions = page.get_text("words")
             for word in word_positions:
                 raw_word = word[4].lower()
                 raw_word = remove_accents(raw_word)
-                raw_word = re.sub(r"[^\w]+", "", raw_word)  # ignore punctuation
+                raw_word = re.sub(r"[^\w]+", "", raw_word)
 
-                if any(nt == raw_word for nt in self.query_terms):
+                if any(nt in raw_word for nt in self.query_terms):  # ← modified
                     rect = QRectF(word[0] * zoom, word[1] * zoom,
                                   (word[2] - word[0]) * zoom,
                                   (word[3] - word[1]) * zoom)
@@ -825,13 +799,12 @@ class SearchApp(QMainWindow):
         vbar.setValue(vbar.value() + 50)
 
     # -------------------------------------------------------------------------
-    # Searching
+    # Searching (with new BM25 substring case)
     # -------------------------------------------------------------------------
     def search(self):
         global GLOBAL_BM25_MODEL, GLOBAL_CORPUS, GLOBAL_EMBED_MODEL, FASTEMBED_AVAILABLE
 
         # Always reset self.query_terms based on the *current* query
-        # so that the highlighting matches whatever query was just entered
         raw_query = self.query_input.text().strip()
         self.query_terms = [remove_accents(w.lower()) for w in re.findall(r"\w+", raw_query, flags=re.IGNORECASE)]
 
@@ -877,7 +850,6 @@ class SearchApp(QMainWindow):
 
         # ---------------------------------------------------------------------
         # CASE 2: "Embeddings search"
-        # (Now we do the penalty *after* we get the top K=MAX_SEARCH_RESULTS)
         # ---------------------------------------------------------------------
         if search_method == "Embeddings search":
             if not self.embeddings_present:
@@ -939,7 +911,124 @@ class SearchApp(QMainWindow):
             return
 
         # ---------------------------------------------------------------------
-        # CASE 3: "BM25"
+        # CASE 3: "BM25 substring"
+        # ---------------------------------------------------------------------
+        if search_method == "BM25 substring":
+            # Parse positive & negative keywords
+            raw_terms = raw_query.split()
+            positive_keywords = []
+            negative_keywords = []
+            for term in raw_terms:
+                norm_term = remove_accents(term.lower())
+                if norm_term.startswith('-') and len(norm_term) > 1:
+                    negative_keywords.append(norm_term[1:])
+                elif not norm_term.startswith('-'):
+                    positive_keywords.append(norm_term)
+            if not positive_keywords:
+                self.result_display.setText("Search requires at least one positive keyword.")
+                return
+
+            # Prepare corpus statistics
+            N = len(GLOBAL_CORPUS)
+            doc_term_freqs = []
+            doc_lengths = []
+            for doc in GLOBAL_CORPUS:	
+                text = doc.get('text', '')
+                norm_text = remove_accents(text.lower())
+                terms = norm_text.split()
+                doc_lengths.append(len(terms))
+                doc_term_freqs.append(Counter(terms))
+            avg_doc_len = sum(doc_lengths) / N if N > 0 else 0.0
+
+            # Precompute document frequencies for each positive keyword
+            dfs = {}
+            for pos_kw in positive_keywords:
+                dfs[pos_kw] = sum(
+                    1 for freq in doc_term_freqs
+                    if any(term.startswith(pos_kw) for term in freq)
+                )
+
+            # BM25 parameters
+            k1 = 1.5
+            b = 0.75
+
+            results_with_flag = []
+            # Evaluate each document
+            for doc_id, doc in enumerate(GLOBAL_CORPUS):
+                freqs = doc_term_freqs[doc_id]
+                doc_len = doc_lengths[doc_id]
+
+                # Exclude if any negative keyword matches
+                if negative_keywords and any(
+                    any(term.startswith(neg_kw) for term in freqs)
+                    for neg_kw in negative_keywords
+                ):
+                    continue
+
+                # Check presence of positive keywords
+                contains_all = True
+                found = []
+                for pos_kw in positive_keywords:
+                    if any(term.startswith(pos_kw) for term in freqs):
+                        found.append(pos_kw)
+                    else:
+                        contains_all = False
+                if not found:
+                    continue  # need at least one match
+
+                # Compute BM25‐style score with prefix TF/IDF
+                bm25_score = 0.0
+                for pos_kw in found:
+                    tf = sum(cnt for term, cnt in freqs.items() if term.startswith(pos_kw))
+                    df = dfs.get(pos_kw, 0)
+                    idf = math.log((N - df + 0.5) / (df + 0.5) + 1.0)
+                    num = idf * tf * (k1 + 1)
+                    den = tf + k1 * (1 - b + b * (doc_len / avg_doc_len if avg_doc_len > 0 else 1))
+                    if den > 0:
+                        bm25_score += num / den
+
+                # Compute a proximity‐enhanced original_score
+                count_score = sum(
+                    cnt for term, cnt in freqs.items()
+                    for pos_kw in found if term.startswith(pos_kw)
+                )
+                prox_score = 0.0
+                if len(found) > 1:
+                    text_norm = remove_accents(doc.get('text', '').lower())
+                    positions = []
+                    for pos_kw in found:
+                        pattern = r'\b' + re.escape(pos_kw)
+                        for m in re.finditer(pattern, text_norm):
+                            positions.append(m.start())
+                    if len(positions) >= 2:
+                        positions.sort()
+                        min_gap = min(
+                            positions[i+1] - positions[i]
+                            for i in range(len(positions)-1)
+                        )
+                        norm_len = max(len(text_norm), 1)
+                        prox_score = max(0.0, 1.0 - (min_gap / norm_len)) * len(found)
+                original_score = count_score + prox_score
+
+                combined = 0.3 * original_score + 0.7 * bm25_score
+                results_with_flag.append((contains_all, combined, doc_id))
+
+            if not results_with_flag:
+                self.result_display.setText("No matching documents found.")
+                return
+
+            # Sort by whether all keywords matched, then by score
+            results_with_flag.sort(key=lambda x: (x[0], x[1]), reverse=True)
+            # Store only (doc_id, score)
+            self.results = [(doc_id, score) for (_, score, doc_id) in results_with_flag]
+            self.results = self.results[:MAX_SEARCH_RESULTS]           # ← modified
+            self.current_result_index = 0
+            self.show_current_chunk()
+            self.status_bar.clearMessage()
+            return
+
+        # ---------------------------------------------------------------------
+        # CASE 4: "BM25"
         # ---------------------------------------------------------------------
         if GLOBAL_BM25_MODEL is None:
             self.result_display.setText("No BM25 model is available.")
@@ -1023,15 +1112,20 @@ class SearchApp(QMainWindow):
         highlighted_text = normalized_text
         for term in self.query_terms:
             escaped_term = re.escape(term)
+            #highlighted_text = re.sub(
+            #    rf'(?i)\b({escaped_term})\b',
+            #    r'<span style="background-color: yellow;">\1</span>',
+            #    highlighted_text,
+            #)
             highlighted_text = re.sub(
-                rf'(?i)\b({escaped_term})\b',
+                rf'(?i)({escaped_term})',
                 r'<span style="background-color: yellow;">\1</span>',
                 highlighted_text,
             )
         return highlighted_text
 
     # -------------------------------------------------------------------------
-    # Zoom and font size
+    # Zoom and font size (unchanged)
     # -------------------------------------------------------------------------
     def zoom_in(self):
         self.scale_factor *= 1.2
@@ -1070,6 +1164,46 @@ class SearchApp(QMainWindow):
             self.font_size -= 1
             self.result_display.setFont(QFont("Arial", self.font_size))
             self.query_input.setFont(QFont("Arial", self.font_size))
+
+    def on_manage_folders(self):
+        """
+        Opens the FoldersDialog to manage the folders. 
+        If the user clicks OK, we update 'folders.ini' and reload the corpus.
+        """
+        global FOLDERS_DB
+        global GLOBAL_EMBED_MODEL
+        global FASTEMBED_AVAILABLE
+
+        dialog = FoldersDialog(folders_list=FOLDERS_DB.copy(), parent=self)
+        result = dialog.exec_()
+        if result == QDialog.Accepted:
+            save_folders_database(dialog.folders_list)
+            FOLDERS_DB = dialog.folders_list
+
+            # Reload the corpus
+            GLOBAL_CORPUS.clear()
+            errors, status = load_corpus_and_initialize_bm25(FOLDERS_DB)
+            self.result_display.clear()
+            for err in errors:
+                self.result_display.append(err)
+            self.result_display.append(status)
+
+            # Check if embeddings are present
+            self.embeddings_present = any(('embedding' in doc) for doc in GLOBAL_CORPUS)
+            if self.embeddings_present and FASTEMBED_AVAILABLE:
+                if GLOBAL_EMBED_MODEL is None:
+                    self.result_display.append("Initializing embedding model...")
+                    GLOBAL_EMBED_MODEL = TextEmbedding(model_name="nomic-ai/nomic-embed-text-v1")
+                self.result_display.append("Folders updated. Corpus and embeddings loaded.")
+            else:
+                if self.embeddings_present and not FASTEMBED_AVAILABLE:
+                    self.result_display.append("Folders updated. Embeddings found, but fastembed is not installed.")
+                else:
+                    self.result_display.append("Folders updated.")
+        else:
+            # user canceled => do nothing
+            pass
+
 
 ###############################################################################
 # Program entry point
